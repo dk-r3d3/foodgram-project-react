@@ -1,20 +1,21 @@
+from django.db.models import Sum
 from django.http import HttpResponse
 from rest_framework import viewsets, filters
 from rest_framework.permissions import (
-    IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+    IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly,
+    SAFE_METHODS
 )
 from rest_framework.decorators import action
 
-# Импорты внутри проекта
 from .models import (
     Ingredients, RecipesIngredients, ShoppingCart, Tag,
     Recipes, Favorites
 )
-from .serializers import (
-    IngredientsSerializer, TagSerializer, RecipesSerializer,
+from api.serializers import (
+    IngredientsSerializer, TagSerializer, RecipesWriteSerializer,
     RecipesReadSerializer
 )
-from .services.add_to import post_or_del_method
+from api.services.add_to import post_or_del_method
 from api.paginations import LimitPageNumberPagination
 
 
@@ -37,13 +38,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = LimitPageNumberPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
-    actions = ['create', 'update']
     search_fields = ('is_favorited', 'author', 'shopping_cart', 'tags')
 
     def get_serializer_class(self):
-        if self.action in self.actions:
-            return RecipesSerializer
-        return RecipesReadSerializer
+        if self.request.method in SAFE_METHODS:
+            return RecipesReadSerializer
+        return RecipesWriteSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -77,18 +77,23 @@ class RecipesViewSet(viewsets.ModelViewSet):
     )
     # скачать рецепт с описанием и ингредиентами
     def download_shopping_cart(self, request):
-        ingredients = RecipesIngredients.objects.filter(
-            recipes__shopping_cart__user=request.user).values(
-            'ingredients__name', 'ingredients__measurement_unit', 'count',
-            'recipes__name', 'recipes__text'
+        user = request.user
+        ingredient_list_user = (
+            RecipesIngredients.objects.
+            prefetch_related('ingredients', 'recipes').
+            filter(recipes__shopping_cart__user=user).
+            values('ingredients__id').
+            order_by('ingredients__id')
+        )
+        shopping_list = (
+            ingredient_list_user.annotate(count=Sum('count')).
+            values_list(
+                'ingredients__name', 'ingredients__measurement_unit', 'count',
+            )
         )
         shopping_cart = '\n'.join([
-            f'Рецепт - "{ingredient["recipes__name"]}" \n'
-            f'Cпособ приготовления - {ingredient["recipes__text"]} \n'
-            f'Ингредиенты: \n'
-            f'{ingredient["ingredients__name"]} - {ingredient["count"]} '
-            f'{ingredient["ingredients__measurement_unit"]}'
-            for ingredient in ingredients
+            f'{ingredient[0]} - {ingredient[2]} {ingredient[1]}'
+            for ingredient in shopping_list
         ])
         filename = 'shopping_cart.txt'
         response = HttpResponse(shopping_cart, content_type='text/plain')

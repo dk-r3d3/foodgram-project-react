@@ -2,7 +2,6 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.contrib.auth import get_user_model
 
-# for TAG
 CHOICES_COLOR = (
     ('#E26C2D', '#E26C2D'),
     ('#49B64E', '#49B64E'),
@@ -22,8 +21,7 @@ CHOICES_SLUG = (
 User = get_user_model()
 
 
-# ингредиенты, 2 поля для заполнения
-class Ingredients(models.Model):  # +
+class Ingredients(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name='Название ингредиента'
@@ -41,8 +39,7 @@ class Ingredients(models.Model):  # +
         return self.name
 
 
-# тег, 3 поля для заполнения, все поля обязательны и уникальны
-class Tag(models.Model):  # +
+class Tag(models.Model):
     name = models.CharField(
         max_length=100,
         verbose_name='Название тега',
@@ -101,7 +98,7 @@ class Recipes(models.Model):
         related_name='recipes',
         verbose_name='Тег'
     )
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveIntegerField(
         validators=[
             MinValueValidator(
                 1, message='Минимальное значение 1 минута'
@@ -140,7 +137,12 @@ class RecipesIngredients(models.Model):
         verbose_name='Рецепт'
     )
     count = models.PositiveIntegerField(
-        verbose_name='Количество'
+        verbose_name='Количество',
+        validators=[
+            MinValueValidator(
+                1, message='Добавьте количество ингредиента'
+                )
+            ]
     )
 
     class Meta:
@@ -165,6 +167,11 @@ class Favorites(models.Model):
 
     class Meta:
         verbose_name = 'Избранное'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_favorites'
+            )
+        ]
 
     def __str__(self):
         return self.user
@@ -189,6 +196,11 @@ class ShoppingCart(models.Model):
 
     class Meta:
         verbose_name = 'Корзина покупок'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_shoppingcart'
+            )
+        ]
 
     def __str__(self):
         return self.user
