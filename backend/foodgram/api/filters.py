@@ -1,32 +1,5 @@
-from django.db.models import IntegerField, Value
 from django_filters import rest_framework
 from recipes.models import Recipes, Tag, Ingredients
-
-
-class FilterIngredients(rest_framework.FilterSet):
-    """Фильтр для ингредиентов"""
-    name = rest_framework.CharFilter(method='search_by_name')
-
-    class Meta:
-        model = Ingredients
-        fields = ('name',)
-
-    def search_by_name(self, queryset, name, value):
-        if not value:
-            return queryset
-        start_with_queryset = (
-            queryset.filter(name__istartswith=value).annotate(
-                order=Value(0, IntegerField())
-            )
-        )
-        contain_queryset = (
-            queryset.filter(name__icontains=value).exclude(
-                pk__in=(ingredients.pk for ingredients in start_with_queryset)
-            ).annotate(
-                order=Value(1, IntegerField())
-            )
-        )
-        return start_with_queryset.union(contain_queryset).order_by('order')
 
 
 class Fav_Cart_Filter(rest_framework.FilterSet):
@@ -65,3 +38,15 @@ class Fav_Cart_Filter(rest_framework.FilterSet):
         if value and self.request.user.is_authenticated:
             return queryset.filter(shopping_cart__user=self.request.user)
         return queryset
+
+
+class FilterIngredients(rest_framework.FilterSet):
+    """Фильтр для ингредиентов"""
+    name = rest_framework.filters.CharFilter(
+        field_name='name',
+        lookup_expr='icontains'
+    )
+
+    class Meta:
+        model = Ingredients
+        fields = ('name',)

@@ -1,4 +1,3 @@
-from asyncore import read
 from rest_framework import serializers, validators
 
 from drf_extra_fields.fields import Base64ImageField
@@ -89,6 +88,7 @@ class RecIngSerializer(serializers.ModelSerializer):
 class RecipesWriteSerializer(serializers.ModelSerializer):
     """Создание рецепта"""
     ingredients = RecIngSerializer(
+        source = 'ingredient_name',
         many=True
     )
     tag = serializers.PrimaryKeyRelatedField(
@@ -108,8 +108,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             'text',
             'ingredients',
             'tag',
-            'cooking_time',
-            # 'is_in_shopping_cart'
+            'cooking_time'
         )
 
     def validate_tag(self, value):
@@ -181,15 +180,15 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return RecipesReadSerializer(
             instance, context=context).data
 
-
-class RecIngReadSerializer(serializers.ModelSerializer):  # ++++
-    """Чтение записи в связанной таблице"""
-    id = serializers.ReadOnlyField(source='ingredients.id')
+class RecIngReadSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredients.objects.all(),
+        source='ingredients.id'
+    )
     name = serializers.ReadOnlyField(source='ingredients.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredients.measurement_unit'
     )
-
     class Meta:
         model = RecipesIngredients
         fields = (
@@ -207,7 +206,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     )
     tag = TagSerializer(many=True, read_only=True)
     author = CustomUserSerializer(read_only=True)
-    image = Base64ImageField()
+    # image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
