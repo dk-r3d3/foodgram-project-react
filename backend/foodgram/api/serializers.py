@@ -110,38 +110,68 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
-    def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
-        if not ingredients:
+    def validate_tag(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError('Необходимо выбрать хотя бы один тег')
+        return value
+
+    def validate_ingredients(self, value):
+        if len(value) == 0:
             raise serializers.ValidationError(
-                {'Нужно выбрать хотя бы один ингредиент'}
+                'Необходимо выбрать хотя бы один ингредиент'
             )
-        for ing in ingredients:
-            count = ing['count']
-            if int(count) == 0:
+        for ingredient in value:
+            if ingredient['count'] == 0:
                 raise serializers.ValidationError(
-                    {'Нужно выбрать количество ингредиента'}
+                    'Необходимо выбрать количество ингредиента'
                 )
-        tag = self.initial_data.get('tag')
-        if not tag:
-            raise serializers.ValidationError(
-                {'Нужно выбрать хотя бы один тег'}
+        return value
+
+    def validate_cookingtime(self, value):
+        for i in value:
+            if not i['cooking_time']:
+                raise serializers.ValidationError(
+                    'Необходимо указать время приготовления рецепта'
+                )
+
+    def create_tags(self, tag, recipes):  # добавить тег 
+        recipes.tag.set(tag) 
+ 
+    def create_ingredients(self, ingredients, recipes):  # добавить ингредиенты 
+        ing = [
+            RecipesIngredients(
+                ingredients=ingredient['id'],
+                count=ingredient['count'],
+                recipes=recipes
             )
-        cooking_time = self.initial_data.get('cooking_time ')
-        if cooking_time == 0:
-            raise serializers.ValidationError(
-                {'Время приготовления должно быть больше 0'}
-            )
-        return data
+            for ingredient in ingredients
+        ]
+        RecipesIngredients.objects.bulk_create(ing)
+
+    def create(self, validated_data):  # функция для создания рецепта 
+        tag = validated_data.pop('tag') 
+        ingredients = validated_data.pop('ingredients') 
+        recipes = Recipes.objects.create(**validated_data) 
+        self.create_tags(tag, recipes) 
+        self.create_ingredients(ingredients, recipes) 
+        return recipes
 
     #  функция для обновления рецепта
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
-        tag_data = validated_data.pop('tag')
-        instance.ingredients.clear()
-        self.create_data(instance, ingredients_data)
-        instance.tag.set(tag_data)
-        return super().update(instance, validated_data)
+        instance.image = validated_data.get('image', instance.image)
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
+        )
+        instance.tag.clear()
+        tag = validated_data.get('tag')
+        self.create_tags(tag, instance)
+        RecipesIngredients.objects.filter(recipes=instance).all().delete()
+        ingredients = validated_data.get('ingredients')
+        self.create_ingredients(ingredients, instance)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         request = self.context.get('request')

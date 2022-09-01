@@ -10,7 +10,7 @@ def post_or_del_method(method, user, pk, model):
     """Метод для добавления/удаления"""
     recipe = get_object_or_404(Recipes, pk=pk)
     if method == 'POST':
-        model.objects.create(user=user, recipe=recipe)
+        model.objects.get_or_create(user=user, recipe=recipe)
         serializer = RecipesReadSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
