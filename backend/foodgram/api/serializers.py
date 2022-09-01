@@ -1,3 +1,4 @@
+from asyncore import read
 from rest_framework import serializers, validators
 
 from drf_extra_fields.fields import Base64ImageField
@@ -107,7 +108,8 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             'text',
             'ingredients',
             'tag',
-            'cooking_time'
+            'cooking_time',
+            # 'is_in_shopping_cart'
         )
 
     def validate_tag(self, value):
@@ -176,7 +178,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
-        return RecipesWriteSerializer(
+        return RecipesReadSerializer(
             instance, context=context).data
 
 
@@ -207,7 +209,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField(read_only=True)
-    shopping_cart = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipes
@@ -221,29 +223,25 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             'tag',
             'cooking_time',
             'is_favorited',
-            'shopping_cart'
+            'is_in_shopping_cart'
         )
 
     def get_ingredients(self, obj):
         ingredients = RecipesIngredients.objects.filter(recipes=obj)
         return RecIngReadSerializer(ingredients, many=True).data
 
-    def get_user(self):
-        return self.context['request'].user
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return Favorites.objects.filter(user=request.user, recipe=obj).exists()
 
-    def get_is_favorited(self, obj):  # избранное
-        user = self.get_user()
-        return (
-            user.is_authenticated
-            and user.favorites.filter(recipe=obj).exists()
-        )
-
-    def get_shopping_cart(self, obj):  # корзина покупок
-        user = self.get_user()
-        return (
-            user.is_authenticated
-            and user.shopping_cart.filter(recipe=obj).exists()
-        )
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        return ShoppingCart.objects.filter(
+            user=request.user, recipe=obj).exists()
 
 
 class SubscribtionReadSerializer(serializers.ModelSerializer):

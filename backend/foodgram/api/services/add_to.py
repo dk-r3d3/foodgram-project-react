@@ -13,8 +13,6 @@ def post_or_del_method(method, user, pk, model):
         model.objects.get_or_create(user=user, recipe=recipe)
         serializer = RecipesReadSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    if method == 'DELETE':
-        favorite = Favorites.objects.filter(user=user, recipe=recipe)
-        favorite.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    instance = get_object_or_404(model, user=user, recipe=recipe)
+    instance.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.http import HttpResponse
-from rest_framework import viewsets, filters
+from django_filters.rest_framework.backends import DjangoFilterBackend
+from rest_framework import viewsets
 from rest_framework.permissions import (
     IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly,
     SAFE_METHODS
@@ -17,13 +18,15 @@ from api.serializers import (
 )
 from api.services.add_to import post_or_del_method
 from api.paginations import LimitPageNumberPagination
+from api.filters import Fav_Cart_Filter, FilterIngredients
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
     permission_classes = (AllowAny,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = FilterIngredients
     search_fields = ('name',)
 
 
@@ -37,7 +40,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     pagination_class = LimitPageNumberPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
+    filterset_class = Fav_Cart_Filter
+    filter_backends = (DjangoFilterBackend,)
     search_fields = ('is_favorited', 'author', 'shopping_cart', 'tags')
 
     def get_serializer_class(self):
@@ -54,7 +58,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
         url_path=r'(?P<pk>\d+)/favorite'
     )
-    def favorite(self, request, pk=None):  # добавление/удаление из избранного
+    def favorites(self, request, pk=None):  # добавление/удаление из избранного
         method = request.method
         user = request.user
         return post_or_del_method(method, user, pk, Favorites)
