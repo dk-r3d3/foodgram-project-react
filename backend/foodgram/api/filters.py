@@ -8,8 +8,8 @@ class Fav_Cart_Filter(rest_framework.FilterSet):
         field_name='author__id',
         lookup_expr='exact'
     )
-    tag = rest_framework.ModelMultipleChoiceFilter(
-        field_name='tag__slug',
+    tags = rest_framework.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all()
     )
@@ -24,7 +24,7 @@ class Fav_Cart_Filter(rest_framework.FilterSet):
         model = Recipes
         fields = (
             'author',
-            'tag',
+            'tags',
             'is_favorited',
             'is_in_shopping_cart'
         )

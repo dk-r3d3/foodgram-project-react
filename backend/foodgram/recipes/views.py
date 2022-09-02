@@ -1,12 +1,13 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework.backends import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import (
     IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly,
     SAFE_METHODS
 )
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import (
     Ingredients, RecipesIngredients, ShoppingCart, Tag,
@@ -14,11 +15,12 @@ from .models import (
 )
 from api.serializers import (
     IngredientsSerializer, TagSerializer, RecipesWriteSerializer,
-    RecipesReadSerializer
+    RecipesReadSerializer, RecipesShowSerializer
 )
 from api.services.add_to import post_or_del_method
 from api.paginations import LimitPageNumberPagination
 from api.filters import Fav_Cart_Filter, FilterIngredients
+from api.permissions import AuthorOrReadOnly
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -28,18 +30,20 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterIngredients
     # search_fields = ('name',)
+    pagination_class = None
 
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     pagination_class = LimitPageNumberPagination
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly,)
     filterset_class = Fav_Cart_Filter
     filter_backends = (DjangoFilterBackend,)
     search_fields = ('is_favorited', 'author', 'shopping_cart', 'tags')
@@ -47,10 +51,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return RecipesWriteSerializer
-        return RecipesReadSerializer
+        return RecipesShowSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
 
     @action(
         methods=('POST', 'DELETE'),

@@ -5,25 +5,29 @@ from rest_framework import status
 from rest_framework.permissions import (IsAuthenticated)
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 
-# импорты внутри проекта
+from api.serializers import CustomUserSerializer
+
+
 from .models import User, Subscribtion
 from api.serializers import (SubscribtionSerializer)
-from api.paginations import LimitPageNumberPagination
 
 
-class UserViewSet(views.UserViewSet):  # вьюсет для работы с пользователем
-    pagination_class = LimitPageNumberPagination
+class UserViewSet(views.UserViewSet):
+    pagination_class = PageNumberPagination
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
 
     @action(
         permission_classes=[IsAuthenticated],
-        detail=True,
-        methods=['POST']
+        detail=False,
+        url_path=r'(?P<pk>\d+)/subscribe',
+        methods=['post']
     )
-    def subscribe(self, request, id=None):  # метод для создания подписки
+    def subscribe(self, request, pk=None):
         user = request.user
-        author = get_object_or_404(User, id=id)
-
+        author = get_object_or_404(User, pk=pk)
         if user == author:
             return Response(
                 {'error': 'Нельзя подписаться на самого себя'},
@@ -36,27 +40,23 @@ class UserViewSet(views.UserViewSet):  # вьюсет для работы с п�
                 {'error': 'Вы уже подписаны на этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        subscribe = Subscribtion.objects.create(user=user, author=author)
-        serializer = SubscribtionSerializer(
-            subscribe, context={'request': request}
+        Subscribtion.objects.create(user=user, author=author)
+        return Response(
+            SubscribtionSerializer(author, context={'request': request}).data,
+            status=status.HTTP_201_CREATED
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
-    def unsubscribe(self, request, id=None):  # метод для отписки от автора
-        user = get_object_or_404(User, id=id)
+    def unsubscribe(self, request, pk=None):
+        user = get_object_or_404(User, pk=pk)
         subscription = Subscribtion.objects.filter(
             user=request.user, author=user
         )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated],
-        methods=['GET']
-    )
-    def subscribtions(self, request):   # метод для получения данных о подписке
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(subscriber__user=user)
         pages = self.paginate_queryset(queryset)
