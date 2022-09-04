@@ -1,4 +1,4 @@
-from rest_framework import serializers, validators
+from rest_framework import serializers
 
 from drf_extra_fields.fields import Base64ImageField
 from djoser.serializers import UserSerializer, UserCreateSerializer
@@ -113,6 +113,7 @@ class RecIngSerializer(serializers.ModelSerializer):
             'count'
         )
 
+
 class RecIngReadSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredients.objects.all(),
@@ -122,6 +123,7 @@ class RecIngReadSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredients.measurement_unit'
     )
+
     class Meta:
         model = RecipesIngredients
         fields = (
@@ -134,6 +136,7 @@ class RecIngReadSerializer(serializers.ModelSerializer):
 
 class RecipesShowSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
+
     class Meta:
         model = Recipes
         fields = (
@@ -146,6 +149,7 @@ class RecipesShowSerializer(serializers.ModelSerializer):
             'tags',
             'cooking_time'
         )
+
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
     """Создание рецепта"""
@@ -171,12 +175,16 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             'tags',
             'cooking_time'
         )
+
     def get_ingredients(self, obj):
         ingredients = RecipesIngredients.objects.filter(recipes=obj)
         return RecIngReadSerializer(ingredients, many=True).data
+
     def validate_tags(self, value):
         if len(value) == 0:
-            raise serializers.ValidationError('Необходимо выбрать хотя бы один тег')
+            raise serializers.ValidationError(
+                'Необходимо выбрать хотя бы один тег'
+            )
         return value
 
     def validate_ingredients(self, value):
@@ -202,10 +210,10 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
                     'Время приготовления должно быть боольше 1 мин.'
                 )
 
-    def create_tags(self, tags, recipes):  # добавить тег 
-        recipes.tags.set(tags) 
- 
-    def create_ingredients(self, ingredients, recipes):  # добавить ингредиенты 
+    def create_tags(self, tags, recipes):  # добавить тег
+        recipes.tags.set(tags)
+
+    def create_ingredients(self, ingredients, recipes):  # добавить ингредиенты
         ing = [
             RecipesIngredients(
                 ingredients=ingredient['id'],
@@ -216,15 +224,15 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         ]
         RecipesIngredients.objects.bulk_create(ing)
 
-    def create(self, validated_data):  # функция для создания рецепта 
+    def create(self, validated_data):  # функция для создания рецепта
         # print(validated_data)
-        tags = validated_data.pop('tags') 
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         # author = self.context['request'].user
         # recipes = Recipes.objects.create(author=author,**validated_data)
         recipes = Recipes.objects.create(**validated_data)
-        self.create_tags(tags, recipes) 
-        self.create_ingredients(ingredients, recipes) 
+        self.create_tags(tags, recipes)
+        self.create_ingredients(ingredients, recipes)
         return recipes
 
     #  функция для обновления рецепта
@@ -253,7 +261,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
 class RecipesReadSerializer(serializers.ModelSerializer):
     """Чтение рецепта"""
-    
+
     ingredients = serializers.SerializerMethodField(
         read_only=True
     )
@@ -263,6 +271,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Recipes
         fields = (
@@ -277,6 +286,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             'is_favorited',
             'is_in_shopping_cart',
         )
+
     def get_user(self):
         return self.context['request'].user
 

@@ -1,13 +1,11 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework.backends import DjangoFilterBackend
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.permissions import (
-    IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly,
-    SAFE_METHODS
+    IsAuthenticated, AllowAny, SAFE_METHODS
 )
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from .models import (
     Ingredients, RecipesIngredients, ShoppingCart, Tag,
@@ -15,7 +13,7 @@ from .models import (
 )
 from api.serializers import (
     IngredientsSerializer, TagSerializer, RecipesWriteSerializer,
-    RecipesReadSerializer, RecipesShowSerializer
+    RecipesShowSerializer
 )
 from api.services.add_to import post_or_del_method
 from api.paginations import LimitPageNumberPagination
@@ -55,7 +53,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
 
     @action(
         methods=('POST', 'DELETE'),
