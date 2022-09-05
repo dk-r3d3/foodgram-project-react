@@ -225,11 +225,8 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         RecipesIngredients.objects.bulk_create(ing)
 
     def create(self, validated_data):  # функция для создания рецепта
-        # print(validated_data)
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        # author = self.context['request'].user
-        # recipes = Recipes.objects.create(author=author,**validated_data)
         recipes = Recipes.objects.create(**validated_data)
         self.create_tags(tags, recipes)
         self.create_ingredients(ingredients, recipes)

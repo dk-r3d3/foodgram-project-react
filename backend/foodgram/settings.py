@@ -11,7 +11,7 @@ SECRET_KEY = (
     'django-insecure-+con@(5e*b5a@(m7s@97j^h$l%5_jy^$xf^%p&ijfylao6ys4i'
     )
 
-# DEBUG = os.getenv('DEBUG', default=False)
+DEBUG = os.getenv('DEBUG', default=False)
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
@@ -117,6 +117,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 6,
 }
 
 DJOSER = {

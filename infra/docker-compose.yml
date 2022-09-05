@@ -1,55 +1,40 @@
 version: '3'
 services:
-
   db:
     image: postgres:13.0-alpine
-    container_name: db
-    hostname: db
-    restart: always
     volumes:
-      - database:/var/lib/postgresql/data/
+      - /var/lib/postgresql/data/
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+        - '5432'
     env_file:
       - ./.env
-    ports:
-      - "5432"
 
   backend:
     image: dkr3d3/backend:v1.09.2022
-    container_name: backend
-    hostname: backend
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
     restart: always
     volumes:
-      - data_value:/app/data/
-      - static_value:/app/static/
-      - media_value:/app/media/
-    ports:
-      - "8000:8000"
+        - static_value:/app/static/
+        - media_value:/app/media/
     depends_on:
-      - db
-    links:
-      - db
-    env_file:
-      - ./.env
+        - db
 
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
-      - ../frontend/:/app/result_build/
+      - ./frontend/:/app/result_build/
 
   nginx:
     image: nginx:1.19.3
-    restart: always
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
       - static_value:/var/html/static/
       - media_value:/var/html/media/
     depends_on:
@@ -57,7 +42,5 @@ services:
       - frontend
 
 volumes:
-  database:
-  data_value:
   static_value:
   media_value:
