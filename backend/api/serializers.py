@@ -135,7 +135,7 @@ class RecIngReadSerializer(serializers.ModelSerializer):
 
 
 class RecipesShowSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()
+    # image = Base64ImageField()
 
     class Meta:
         model = Recipes
@@ -161,7 +161,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         many=True
     )
     author = CustomUserSerializer(read_only=True)
-    image = Base64ImageField()
+    # image = Base64ImageField()
 
     class Meta:
         model = Recipes
@@ -265,7 +265,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = CustomUserSerializer(read_only=True)
     # print(author)
-    image = Base64ImageField()
+    # image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
