@@ -1,68 +1,47 @@
-from django.shortcuts import get_object_or_404
-from djoser import views
-
 from rest_framework import status
-from rest_framework.permissions import (IsAuthenticated)
-from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
 
-from api.serializers import CustomUserSerializer
-
-
-from .models import User, Subscribtion
-from api.serializers import (SubscribtionSerializer)
+from api.paginations import LimitPageNumberPagination
+from users.models import Subscribtion, User
+from api.serializers import SubcribeListSerializer, SubcribeSerializer
 
 
-class UserViewSet(views.UserViewSet):
-    pagination_class = PageNumberPagination
-    queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
+class SubcribeApiView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    @action(
-        permission_classes=[IsAuthenticated],
-        detail=False,
-        url_path=r'(?P<pk>\d+)/subscribe',
-        methods=['post']
-    )
-    def subscribe(self, request, pk=None):
+    def post(self, request, id):
+        data = {'user': request.user.id, 'author': id}
+        serializer = SubcribeSerializer(
+            data=data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, id):
         user = request.user
-        author = get_object_or_404(User, pk=pk)
-        if user == author:
-            return Response(
-                {'error': 'Нельзя подписаться на самого себя'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if Subscribtion.objects.filter(
-                user=user, author=author
-        ).exists():
-            return Response(
-                {'error': 'Вы уже подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        Subscribtion.objects.create(user=user, author=author)
-        return Response(
-            SubscribtionSerializer(author, context={'request': request}).data,
-            status=status.HTTP_201_CREATED
+        author = get_object_or_404(User, id=id)
+        follow = get_object_or_404(
+            Subscribtion, user=user, author=author
         )
-
-    @subscribe.mapping.delete
-    def unsubscribe(self, request, pk=None):
-        user = get_object_or_404(User, pk=pk)
-        subscription = Subscribtion.objects.filter(
-            user=request.user, author=user
-        )
-        subscription.delete()
+        follow.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, permission_classes=[IsAuthenticated])
-    def subscriptions(self, request):
+
+class SubcribeListAPIView(ListAPIView):
+    pagination_class = LimitPageNumberPagination
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
         user = request.user
-        queryset = User.objects.filter(subscriber__user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = SubscribtionSerializer(
-            pages,
-            many=True,
+        queryset = User.objects.filter(author__user=user)
+        page = self.paginate_queryset(queryset)
+        serializer = SubcribeListSerializer(
+            page, many=True,
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)

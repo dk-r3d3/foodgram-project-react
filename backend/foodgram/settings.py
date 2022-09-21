@@ -6,10 +6,11 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    default='django-insecure-+con@(5e*b5a@(m7s@97j^h$l%5_jy^$xf^%p&ijfylao6ys4i'
+)
 
-SECRET_KEY = (
-    'django-insecure-+con@(5e*b5a@(m7s@97j^h$l%5_jy^$xf^%p&ijfylao6ys4i'
-    )
 
 DEBUG = True
 # DEBUG = os.getenv('DEBUG', default=False)
@@ -70,7 +71,7 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', default='postgres'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
-        'HOST': os.getenv('DB_HOST', default='db'),
+        'HOST': os.getenv('DB_HOST', default='localhost'),
         'PORT': os.getenv('DB_PORT', default='5432')
     }
 }
@@ -117,8 +118,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 6,
 }
 
 DJOSER = {

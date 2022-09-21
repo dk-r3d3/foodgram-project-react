@@ -81,7 +81,7 @@ class Recipes(models.Model):
         verbose_name='Название рецепта'
     )
     image = models.ImageField(
-        upload_to='media',
+        upload_to='recipes/',
         verbose_name='Картинка'
     )
     text = models.TextField(
@@ -119,8 +119,8 @@ class Recipes(models.Model):
     def __str__(self):
         return self.author
 
-    def _count_ingredients(self):
-        return self.ingredients.count()
+    def _amount_ingredients(self):
+        return self.ingredients.amount()
 
 
 class RecipesIngredients(models.Model):
@@ -136,7 +136,7 @@ class RecipesIngredients(models.Model):
         related_name='recipe',
         verbose_name='Рецепт'
     )
-    count = models.PositiveIntegerField(
+    amount = models.PositiveIntegerField(
         verbose_name='Количество',
         validators=[
             MinValueValidator(

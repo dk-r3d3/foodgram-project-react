@@ -41,7 +41,7 @@ class RecipesIngredientsAdmin(admin.ModelAdmin):
     list_display = (
         'ingredients',
         'recipes',
-        'count'
+        'amount'
     )
 
 

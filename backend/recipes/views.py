@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework.backends import DjangoFilterBackend
+
 from rest_framework import viewsets
 from rest_framework.permissions import (
     IsAuthenticated, AllowAny, SAFE_METHODS
@@ -13,7 +14,7 @@ from .models import (
 )
 from api.serializers import (
     IngredientsSerializer, TagSerializer, RecipesWriteSerializer,
-    RecipesShowSerializer
+    RecipesReadSerializer
 )
 from api.services.add_to import post_or_del_method
 from api.paginations import LimitPageNumberPagination
@@ -24,10 +25,9 @@ from api.permissions import AuthorOrReadOnly
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
-    # permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterIngredients
-    # search_fields = ('name',)
+    search_fields = ('name',)
     pagination_class = None
 
 
@@ -48,8 +48,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
-            return RecipesWriteSerializer
-        return RecipesShowSerializer
+            return RecipesReadSerializer
+        return RecipesWriteSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -92,9 +92,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
             order_by('ingredients__id')
         )
         shopping_list = (
-            ingredient_list_user.annotate(count=Sum('count')).
+            ingredient_list_user.annotate(amount=Sum('amount')).
             values_list(
-                'ingredients__name', 'ingredients__measurement_unit', 'count',
+                'ingredients__name', 'ingredients__measurement_unit', 'amount',
             )
         )
         shopping_cart = '\n'.join([

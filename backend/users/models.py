@@ -25,12 +25,6 @@ class User(AbstractUser):
         max_length=150,
         verbose_name='Пароль'
     )
-    is_subscribed = models.ManyToManyField(
-        to='self',
-        through='Subscribtion',
-        symmetrical=False,
-        verbose_name='Подписчики'
-    )
 
     class Meta:
         verbose_name = 'User'

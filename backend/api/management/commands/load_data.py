@@ -8,6 +8,8 @@ from recipes.models import Ingredients
 
 
 class Command(BaseCommand):
+    """Скрипт для загрузки ингредиентов в БД на сервере."""
+
     help = 'loading ingredients from data in json'
 
     def handle(self, *args, **options):

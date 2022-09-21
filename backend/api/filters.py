@@ -3,7 +3,7 @@ from recipes.models import Recipes, Tag, Ingredients
 
 
 class Fav_Cart_Filter(rest_framework.FilterSet):
-    """Набор фильтров для получения списка рецептов в избранном и корзине"""
+    """Набор фильтров для получения списка рецептов в избранном и в корзине"""
     author = rest_framework.filters.NumberFilter(
         field_name='author__id',
         lookup_expr='exact'
