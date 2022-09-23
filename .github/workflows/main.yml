@@ -22,9 +22,6 @@ jobs:
     - name: Test with flake8 and django tests
       run: |
         flake8
-    - name: Pytest
-      run: |
-        pytest
 
     - name: Send message if Tests failed
       if: ${{ failure() }}
