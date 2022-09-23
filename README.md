@@ -70,17 +70,17 @@ sudo docker build -t dkr3d3/backend:v1.09.2022 .
 sudo docker-compose up -d --build
 ```
 
-Применяем миграции
+####### Применяем миграции
 ```bash
 sudo docker-compose exec backend python manage.py migrate --noinput
 ```
 
-Подгружаем статику
+####### Подгружаем статику
 ```bash
 sudo docker-compose exec backend python manage.py collectstatic --noinput 
 ```
 
-Заполняем базу данных:
+####### Заполняем базу данных:
 ```bash
 sudo docker-compose exec backend python manage.py load_data
 ```
