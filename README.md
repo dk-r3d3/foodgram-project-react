@@ -60,32 +60,32 @@ TELEGRAM_TOKEN=<токен вашего бота>
 ##### Шаг 7. После успешного деплоя:
 Зайдите на сервер и выполните команды:
 
-###### Из директории backend:
+##### Из директории backend:
 ```bash
 sudo docker build -t dkr3d3/backend:v1.09.2022 .
 ```
 
-###### Из директории infra:
+##### Из директории infra:
 ```bash
 sudo docker-compose up -d --build
 ```
 
-####### Применяем миграции
+###### Применяем миграции
 ```bash
 sudo docker-compose exec backend python manage.py migrate --noinput
 ```
 
-####### Подгружаем статику
+###### Подгружаем статику
 ```bash
 sudo docker-compose exec backend python manage.py collectstatic --noinput 
 ```
 
-####### Заполняем базу данных:
+###### Заполняем базу данных:
 ```bash
 sudo docker-compose exec backend python manage.py load_data
 ```
 
-###### Создаем суперпользователя Django:
+##### Создаем суперпользователя Django:
 ```bash
 sudo docker-compose exec backend python manage.py createsuperuser
 ```
