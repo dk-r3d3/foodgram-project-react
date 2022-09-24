@@ -2,6 +2,7 @@ version: '3'
 services:
   db:
     image: postgres:13.0-alpine
+    restart: always
     volumes:
       - /var/lib/postgresql/data/
     environment:
@@ -21,6 +22,7 @@ services:
         - db
 
   frontend:
+    restart: always
     build:
       context: ../frontend
       dockerfile: Dockerfile
@@ -29,6 +31,7 @@ services:
 
   nginx:
     image: nginx:1.19.3
+    restart: always
     ports:
       - "80:80"
     volumes:
