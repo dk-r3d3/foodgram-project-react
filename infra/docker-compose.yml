@@ -7,8 +7,6 @@ services:
       - /var/lib/postgresql/data/
     environment:
       POSTGRES_PASSWORD: postgres
-    ports:
-        - '5432:5432'
     env_file:
       - ./.env
 
@@ -22,10 +20,10 @@ services:
         - db
 
   frontend:
-    restart: always
     build:
       context: ../frontend
       dockerfile: Dockerfile
+    restart: always
     volumes:
       - ./frontend/:/app/result_build/
 
