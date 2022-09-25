@@ -2,12 +2,11 @@ version: '3'
 services:
   db:
     image: postgres:13.0-alpine
+    restart: always
     volumes:
       - /var/lib/postgresql/data/
     environment:
       POSTGRES_PASSWORD: postgres
-    ports:
-        - '5432:5432'
     env_file:
       - ./.env
 
@@ -24,11 +23,13 @@ services:
     build:
       context: ../frontend
       dockerfile: Dockerfile
+    restart: always
     volumes:
       - ./frontend/:/app/result_build/
 
   nginx:
     image: nginx:1.19.3
+    restart: always
     ports:
       - "80:80"
     volumes:

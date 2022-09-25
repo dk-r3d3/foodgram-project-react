@@ -116,9 +116,6 @@ class Recipes(models.Model):
         verbose_name = "Рецепт"
         ordering = ['-pub_date', ]
 
-    def __str__(self):
-        return self.author
-
     def _amount_ingredients(self):
         return self.ingredients.amount()
 
@@ -141,8 +138,8 @@ class RecipesIngredients(models.Model):
         validators=[
             MinValueValidator(
                 1, message='Добавьте количество ингредиента'
-                )
-            ]
+            )
+        ]
     )
 
     class Meta:
@@ -172,9 +169,6 @@ class Favorites(models.Model):
                 fields=['user', 'recipe'], name='unique_favorites'
             )
         ]
-
-    def __str__(self):
-        return self.user
 
 
 class ShoppingCart(models.Model):

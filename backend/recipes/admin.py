@@ -9,9 +9,13 @@ from .models import (
 class RecipesAdmin(admin.ModelAdmin):
     list_display = (
         'name',
-        'author'
+        'author',
+        'quantity_favorites'
     )
     list_filter = ('author', 'name', 'tags',)
+
+    def quantity_favorites(self, obj):
+        return obj.favorites.count()
 
 
 class IngredientsAdmin(admin.ModelAdmin):
@@ -32,9 +36,11 @@ class TagAdmin(admin.ModelAdmin):
 
 class FavouritesAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'user',
         'recipe'
     )
+    list_filter = ('user', 'recipe')
 
 
 class RecipesIngredientsAdmin(admin.ModelAdmin):
