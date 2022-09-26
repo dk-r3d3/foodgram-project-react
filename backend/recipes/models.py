@@ -33,6 +33,7 @@ class Ingredients(models.Model):
 
     class Meta:
         verbose_name = "Ингредиент"
+        verbose_name_plural = "Ingredients"
         ordering = ('id',)
 
     def __str__(self):
@@ -114,10 +115,14 @@ class Recipes(models.Model):
 
     class Meta:
         verbose_name = "Рецепт"
+        verbose_name_plural = 'Recipes'
         ordering = ['-pub_date', ]
 
     def _amount_ingredients(self):
         return self.ingredients.amount()
+
+    def __str__(self):
+        return self.name
 
 
 class RecipesIngredients(models.Model):
@@ -144,6 +149,7 @@ class RecipesIngredients(models.Model):
 
     class Meta:
         verbose_name = 'Ингредиенты в рецепте'
+        verbose_name_plural = 'Ingredients in recipes'
 
 
 class Favorites(models.Model):
@@ -164,6 +170,7 @@ class Favorites(models.Model):
 
     class Meta:
         verbose_name = 'Избранное'
+        verbose_name_plural = 'Favorites'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'], name='unique_favorites'
@@ -190,6 +197,7 @@ class ShoppingCart(models.Model):
 
     class Meta:
         verbose_name = 'Корзина покупок'
+        verbose_name_plural = 'ShoppingCart'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'], name='unique_shoppingcart'
