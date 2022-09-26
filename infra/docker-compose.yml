@@ -5,6 +5,11 @@ services:
     restart: always
     volumes:
       - /var/lib/postgresql/data/
+<<<<<<< HEAD
+=======
+    environment:
+      POSTGRES_PASSWORD: postgres
+>>>>>>> 5fd1498ceb2556063c7c6dee26e6596f70ff871e
     env_file:
       - ./.env
 
